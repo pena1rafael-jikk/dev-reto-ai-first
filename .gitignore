@@ -1,0 +1,46 @@
+# Claude internal
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ruff / mypy
+.mypy_cache/
+.ruff_cache/
+
+# Node / Angular
+node_modules/
+/frontend/dist/
+/frontend/.angular/
+*.tgz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — nunca commitear el .env real
+.env
+!.env.example
