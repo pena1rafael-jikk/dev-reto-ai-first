@@ -39,9 +39,9 @@ class SecopService:
 
         precio_min = filters.get("precio_min")
         precio_max = filters.get("precio_max")
-        if precio_min:
+        if precio_min is not None:
             clauses.append(f"precio_base>='{_escape_soql(str(precio_min))}'")
-        if precio_max:
+        if precio_max is not None:
             clauses.append(f"precio_base<='{_escape_soql(str(precio_max))}'")
 
         return " AND ".join(clauses)
@@ -62,7 +62,7 @@ class SecopService:
                 resp = await client.get(self._base_url, params=params)
                 resp.raise_for_status()
                 return [map_secop_response(item) for item in resp.json()]
-        except (httpx.TimeoutException, httpx.HTTPStatusError) as exc:
+        except (httpx.RequestError, httpx.HTTPStatusError) as exc:
             raise SecopServiceError("SODA API no disponible") from exc
 
     async def get_by_id(self, secop_process_id: str) -> SecopConvocatoria | None:
@@ -76,7 +76,7 @@ class SecopService:
                 if not items:
                     return None
                 return map_secop_response(items[0])
-        except (httpx.TimeoutException, httpx.HTTPStatusError) as exc:
+        except (httpx.RequestError, httpx.HTTPStatusError) as exc:
             raise SecopServiceError("SODA API no disponible") from exc
 
     async def get_raw_by_id(self, secop_process_id: str) -> dict | None:
@@ -88,5 +88,5 @@ class SecopService:
                 resp.raise_for_status()
                 items = resp.json()
                 return items[0] if items else None
-        except (httpx.TimeoutException, httpx.HTTPStatusError) as exc:
+        except (httpx.RequestError, httpx.HTTPStatusError) as exc:
             raise SecopServiceError("SODA API no disponible") from exc

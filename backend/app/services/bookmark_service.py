@@ -33,7 +33,12 @@ class BookmarkService:
                 status_code=404,
                 detail={"code": "NOT_FOUND", "message": "Proceso SECOP no encontrado"},
             )
-        return await self.repo.create(user_id, conv, snapshot or {})
+        if snapshot is None:
+            raise HTTPException(
+                status_code=502,
+                detail={"code": "SECOP_ERROR", "message": "No se pudo obtener el snapshot del proceso"},
+            )
+        return await self.repo.create(user_id, conv, snapshot)
 
     async def soft_delete(self, user_id: int, bookmark_id: int):
         bm = await self.repo.get_by_id(bookmark_id)
@@ -42,4 +47,4 @@ class BookmarkService:
                 status_code=404,
                 detail={"code": "NOT_FOUND", "message": "Bookmark no encontrado"},
             )
-        return await self.repo.soft_delete(bookmark_id)
+        return await self.repo.soft_delete(bm)

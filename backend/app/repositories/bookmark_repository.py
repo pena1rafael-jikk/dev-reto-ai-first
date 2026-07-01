@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,9 +72,8 @@ class BookmarkRepository:
         await self.db.refresh(bm)
         return bm
 
-    async def soft_delete(self, bookmark_id: int) -> Bookmark:
-        bm = await self.get_by_id(bookmark_id)
-        bm.deleted_at = datetime.utcnow()
+    async def soft_delete(self, bm: Bookmark) -> Bookmark:
+        bm.deleted_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(bm)
         return bm
