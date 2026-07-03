@@ -14,9 +14,9 @@
 Se construyó el **Portal de Convocatorias Públicas**, una aplicación web full-stack que permite explorar, filtrar y guardar convocatorias públicas del SECOP consumiendo datos en vivo desde `datos.gov.co` (Socrata Open Data API).
 
 - **Qué resuelve:** el portal oficial del SECOP es lento, no permite guardar procesos ni persistir búsquedas. Esta aplicación ofrece búsqueda con filtros combinables, guardado de convocatorias con snapshot inmutable y búsquedas reutilizables.
-- **Estado actual:** producto **funcional y demostrado end-to-end**. La **suite de tests fue ejecutada y pasa: 24 passed** (ver §4), tras corregir la infraestructura de tests que estaba rota.
+- **Estado actual:** producto **funcional y demostrado end-to-end**. La **suite de tests fue ejecutada y pasa: 24 passed** (ver §4), tras corregir la infraestructura de tests que estaba rota. Las correcciones ya están **commiteadas y pusheadas** a GitHub (commit `8aa891f`).
 - **Regla del reto cumplida:** cero código manual — todo el código fue generado por LLMs bajo dirección spec-first.
-- **Debilidades honestas:** (1) los tests **no corrían** hasta hoy: los modelos usaban tipos exclusivos de PostgreSQL (`JSONB`, PK `BigInteger`) incompatibles con el SQLite de los tests, y un mock de test era inconsistente — todo eso se corrigió en esta sesión; (2) esas correcciones **aún no están commiteadas** (viven en el árbol de trabajo); (3) la **trazabilidad de git es baja** (3 commits); (4) **no hay despliegue en la nube** — el despliegue es local vía Docker Compose.
+- **Debilidades honestas:** (1) los tests **no corrían** hasta hoy: los modelos usaban tipos exclusivos de PostgreSQL (`JSONB`, PK `BigInteger`) incompatibles con el SQLite de los tests, y un mock de test era inconsistente — todo eso se corrigió en esta sesión y ya está en GitHub; (2) la **trazabilidad de git es baja** (4 commits, con poca granularidad); (3) **no hay despliegue en la nube** — el despliegue es local vía Docker Compose.
 
 ---
 
@@ -103,7 +103,7 @@ Los 24 tests cubren auth, perfil, convocatorias, bookmarks y búsquedas. **Impor
 - `models/{user,bookmark,saved_search}.py`: PK `BigInteger` → `BigInteger().with_variant(Integer(), "sqlite")` (SQLite solo autoincrementa `INTEGER PRIMARY KEY`).
 - `tests/test_bookmarks.py`: un mock inconsistente (el conv devuelto tenía distinto `secop_process_id` que el body) impedía detectar el duplicado. Producción era correcta; el test estaba mal.
 
-Estas correcciones **están en el árbol de trabajo, sin commitear** al momento de este reporte.
+Estas correcciones ya están **commiteadas y pusheadas** (commit `8aa891f feat(models): ajustar tipos de columnas para compatibilidad con SQLite`); `main` sincronizado con `origin/main`, árbol limpio.
 
 **Comandos relevantes:**
 ```bash
@@ -165,7 +165,6 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 - **Suite de tests rota** (24 errores): modelos con tipos exclusivos de Postgres (`JSONB`, PK `BigInteger`) incompatibles con SQLite + un mock inconsistente → resuelto con `with_variant` cross-dialecto y corrección del test. Resultado: **24 passed**.
 
 **Abiertos / pendientes:**
-- **Correcciones sin commitear:** los arreglos de tests de hoy viven en el árbol de trabajo (`git status`: 4 archivos modificados). Falta commitear y pushear.
 - **Despliegue:** no hay configuración cloud ni URL pública; solo despliegue local vía Docker.
 - **Trazabilidad de git baja:** 3 commits para todo el proyecto; falta granularidad e historial.
 - **Ajustes de UI:** el rediseño está aplicado, pero no hubo una pasada final de QA visual documentada.
@@ -177,13 +176,13 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 **Listo y verificado:**
 - ✅ Correcciones del code review presentes en `HEAD` (verificado con `git grep`).
 - ✅ **Tests automatizados: 24 passed** (ejecutado hoy con SQLite en memoria).
+- ✅ **Commit + push realizados** (commit `8aa891f`); `main` sincronizado con `origin/main`, árbol limpio.
 - ✅ Stack levanta con Docker; `GET /health` responde OK; frontend accesible; integración SECOP en vivo (verificado durante la sesión y en la demo grabada).
 
 **Probado manualmente:**
 - ✅ Flujo E2E completo (register → browse → bookmark → delete → perfil).
 
 **Falta validar / cerrar:**
-- ⚠️ **Commit + push** de las correcciones de tests de hoy (4 archivos modificados en el árbol de trabajo).
 - ⚠️ Reconstrucción limpia de Docker post-correcciones con evidencia registrada.
 - ⚠️ Cualquier despliegue en la nube.
 
@@ -191,7 +190,7 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 
 ## 10. Próximos pasos
 
-1. **Commitear y pushear** las correcciones de tests de hoy (cross-dialecto + mock) con mensajes semánticos.
+1. ~~Commitear y pushear las correcciones de tests de hoy.~~ ✅ **Hecho** (commit `8aa891f`, pusheado a `origin/main`).
 2. **Reconstruir Docker** (`docker compose up --build`) y re-verificar el E2E tras las correcciones.
 3. **Mejorar trazabilidad:** commits granulares y semánticos de aquí en adelante.
 4. **Evaluar despliegue** en una plataforma (documentar URL pública si se realiza).
