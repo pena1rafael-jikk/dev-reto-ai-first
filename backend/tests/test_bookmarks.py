@@ -20,10 +20,12 @@ async def test_create_bookmark_ok(client: AsyncClient, auth_headers: dict):
 
 
 async def test_create_bookmark_duplicate(client: AsyncClient, auth_headers: dict):
+    # El conv devuelto por SECOP debe tener el mismo id que se solicita (como en producción).
+    dup_conv = SecopConvocatoria(secop_process_id="BM-DUP", entidad="Entidad", departamento="Bogotá D.C.")
     with patch("app.services.bookmark_service.SecopService.get_by_id", new_callable=AsyncMock) as m1, \
          patch("app.services.bookmark_service.SecopService.get_raw_by_id", new_callable=AsyncMock) as m2:
-        m1.return_value = MOCK_CONV
-        m2.return_value = MOCK_RAW
+        m1.return_value = dup_conv
+        m2.return_value = {"id_del_proceso": "BM-DUP", "entidad": "Entidad"}
         await client.post("/api/v1/bookmarks", json={"secop_process_id": "BM-DUP"}, headers=auth_headers)
         resp = await client.post("/api/v1/bookmarks", json={"secop_process_id": "BM-DUP"}, headers=auth_headers)
     assert resp.status_code == 409

@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, Text, UniqueConstraint
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -14,7 +14,7 @@ class User(Base):
         CheckConstraint("length(password_hash) > 0", name="chk_users_pwd_hash"),
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer(), "sqlite"), primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(Text, nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     full_name: Mapped[str] = mapped_column(Text, nullable=False)

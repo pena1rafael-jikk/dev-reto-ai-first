@@ -1,7 +1,7 @@
 from decimal import Decimal
 from datetime import datetime
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Numeric, Text
+from sqlalchemy import JSON, BigInteger, CheckConstraint, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -15,7 +15,7 @@ class Bookmark(Base):
         CheckConstraint("length(trim(secop_process_id)) > 0", name="chk_bookmarks_secop_id"),
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer(), "sqlite"), primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     secop_process_id: Mapped[str] = mapped_column(Text, nullable=False)
     entidad: Mapped[str | None] = mapped_column(Text)
@@ -32,6 +32,6 @@ class Bookmark(Base):
     estado_procedimiento: Mapped[str | None] = mapped_column(Text)
     estado_apertura: Mapped[str | None] = mapped_column(Text)
     url_secop: Mapped[str | None] = mapped_column(Text)
-    secop_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    secop_snapshot: Mapped[dict] = mapped_column(JSONB().with_variant(JSON(), "sqlite"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
