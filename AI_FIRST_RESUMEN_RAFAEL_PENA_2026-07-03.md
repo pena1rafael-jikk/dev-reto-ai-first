@@ -1,14 +1,5 @@
 # Resumen AI First - Rafael Peña - 2026-07-03
 
-> **Nota sobre el autor:** la plantilla recibida traía el título con "Emmanuel Ortega", pero
-> el nombre de archivo (`RAFAEL_PENA`), el repositorio (`pena1rafael-jikk`) y el autor en
-> `git`/`SOUL.md` corresponden a **Rafael Peña**. Se usa ese nombre. Corregir si aplica.
->
-> Documento basado en evidencia verificable del repositorio a 2026-07-03. No se adorna:
-> lo no comprobable se marca como **pendiente** o **no verificado**.
-
----
-
 ## 1. Resumen ejecutivo
 
 Se construyó el **Portal de Convocatorias Públicas**, una aplicación web full-stack que permite explorar, filtrar y guardar convocatorias públicas del SECOP consumiendo datos en vivo desde `datos.gov.co` (Socrata Open Data API).
@@ -32,35 +23,43 @@ Se construyó el **Portal de Convocatorias Públicas**, una aplicación web full
 ## 3. Avances realizados desde la semana pasada hasta hoy
 
 ### Producto / funcionalidad
+
 - Flujo E2E completo: registro → búsqueda en vivo → guardar bookmark (con snapshot SECOP) → ver/eliminar guardados → editar perfil.
 - Búsquedas guardadas reutilizables (parámetros de filtro persistidos por nombre).
 
 ### Frontend / UI
+
 - Angular 20 standalone: 6 pantallas (login, register, convocatorias, detalle, bookmarks, perfil).
 - Rediseño de UI con design system propio (tipografía Plus Jakarta Sans, paleta navy/CTA, contraste WCAG) y estados obligatorios loading / error / empty.
 - `proxy.conf.json` para enrutar `/api` al backend dentro de la red Docker.
 
 ### Backend / datos
+
 - FastAPI (Python 3.12) con capas estrictas: `api/v1` → `services` → `repositories` → `models`.
 - `SecopService` como único punto de integración con `datos.gov.co` (escape SoQL, timeout 10s, errores → 502).
 - PostgreSQL 16: 3 tablas (`users`, `bookmarks`, `saved_searches`), soft-delete, partial unique index, índice GIN sobre snapshot JSONB.
 
 ### Autenticación
+
 - JWT HS256 (python-jose) + hashing bcrypt (passlib); `get_current_user` como dependencia; auto-login tras registro; interceptor que inyecta el Bearer solo en `/api/`.
 
 ### Despliegue
+
 - Orquestación local con Docker Compose (`docker compose up --build` levanta DB + backend + frontend).
 - **No verificado / pendiente:** no existe despliegue en la nube ni URL pública (ver §4 y §8).
 
 ### Documentación
+
 - `README.md` reescrito como manual de arranque multiplataforma (Windows/Mac/Linux) con troubleshooting.
 - `SOUL.md` ampliado con las 7 secciones obligatorias.
 - 5 especificaciones en `spec/` (spec-01 a spec-05) + `TEMPLATE.md` + `PLAN.md`.
 
 ### Demo / presentación
+
 - Video de demostración E2E grabado con Playwright: `demo/screenshots/demo-portal-secop.webm` (~3.7 MB), con cursor animado y subtítulos por paso.
 
 ### Uso de agentes IA
+
 - Metodología spec-first dirigida por specs de profundidad B.
 - Revisión de código multi-agente que detectó 10 bugs; los prioritarios fueron corregidos y commiteados.
 
@@ -69,36 +68,44 @@ Se construyó el **Portal de Convocatorias Públicas**, una aplicación web full
 ## 4. Evidencia técnica
 
 **Repositorio (verificado):**
+
 - Remote: `git@github.com:pena1rafael-jikk/dev-reto-ai-first.git`
 - Rama `main` sincronizada con `origin/main` (sin commits pendientes de push).
 - Árbol de trabajo limpio (solo este archivo de resumen figura como nuevo/untracked).
 
 **Commits existentes (`git log`):**
+
 ```
 a511bb8 · 2026-07-01 · feat(docs): mejorar la documentación del README.md
 19ea91b · 2026-07-01 · feat(auth): streamline registration response handling
 29d3a72 · 2026-06-30 · feat: Implement phased implementation plan for Public Call Portal
 ```
+
 > Solo **3 commits**. La granularidad es baja (debilidad de trazabilidad), aunque el contenido —incluidas las correcciones del code review— sí está persistido en `HEAD` y en el remoto.
 
 **Correcciones del code review verificadas en HEAD (`git grep`):**
+
 - `backend/app/models/{user,bookmark,saved_search}.py` → `DateTime(timezone=True)` en las columnas de timestamp.
 - `backend/app/repositories/bookmark_repository.py` → `async def soft_delete(self, bm: Bookmark)` (sin doble fetch).
 
 **Métricas del árbol (conteo directo):**
-| Área | Evidencia |
-|------|-----------|
-| Backend | 32 archivos `.py` en `backend/app/` |
-| Tests backend | 7 archivos `.py` en `backend/tests/` |
-| Frontend | 27 archivos `.ts` en `frontend/src/` |
-| Specs | 7 archivos `.md` en `spec/` |
-| Migración | `migrations/001_initial_schema.sql` |
+
+| Área          | Evidencia                           |
+| ------------- | ----------------------------------- |
+| Backend       | 32 archivos`.py` en `backend/app/`  |
+| Tests backend | 7 archivos`.py` en `backend/tests/` |
+| Frontend      | 27 archivos`.ts` en `frontend/src/` |
+| Specs         | 7 archivos`.md` en `spec/`          |
+| Migración     | `migrations/001_initial_schema.sql` |
 
 **Resultado de tests (ejecutado y verificado hoy, 2026-07-03):**
+
 ```
 pytest -q  →  24 passed in 5.25s
 ```
+
 Los 24 tests cubren auth, perfil, convocatorias, bookmarks y búsquedas. **Importante y honesto:** la suite **no corría** antes de esta sesión — fallaba con 24 errores. Para que corriera hubo que corregir:
+
 - `models/bookmark.py`, `models/saved_search.py`: `JSONB` → `JSONB().with_variant(JSON(), "sqlite")` (JSONB no compila en SQLite).
 - `models/{user,bookmark,saved_search}.py`: PK `BigInteger` → `BigInteger().with_variant(Integer(), "sqlite")` (SQLite solo autoincrementa `INTEGER PRIMARY KEY`).
 - `tests/test_bookmarks.py`: un mock inconsistente (el conv devuelto tenía distinto `secop_process_id` que el body) impedía detectar el duplicado. Producción era correcta; el test estaba mal.
@@ -106,6 +113,7 @@ Los 24 tests cubren auth, perfil, convocatorias, bookmarks y búsquedas. **Impor
 Estas correcciones ya están **commiteadas y pusheadas** (commit `8aa891f feat(models): ajustar tipos de columnas para compatibilidad con SQLite`); `main` sincronizado con `origin/main`, árbol limpio.
 
 **Comandos relevantes:**
+
 ```bash
 docker compose up --build            # Levanta todo el stack
 curl http://localhost:8000/health    # → {"status":"ok"} (verificado en sesión)
@@ -158,6 +166,7 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 ## 8. Bloqueos o dificultades
 
 **Resueltos (verificados):**
+
 - `POST /register` → 500 por incompatibilidad passlib/bcrypt 4.x → resuelto pineando `bcrypt==3.2.2`.
 - `ng serve` fallaba con flags CLI antiguos (Angular 20 / Vite) → resuelto con target `serve` en `angular.json`.
 - Frontend llamaba a `:4200/api` (404) → resuelto con `proxy.conf.json` hacia `backend:8000`.
@@ -165,6 +174,7 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 - **Suite de tests rota** (24 errores): modelos con tipos exclusivos de Postgres (`JSONB`, PK `BigInteger`) incompatibles con SQLite + un mock inconsistente → resuelto con `with_variant` cross-dialecto y corrección del test. Resultado: **24 passed**.
 
 **Abiertos / pendientes:**
+
 - **Despliegue:** no hay configuración cloud ni URL pública; solo despliegue local vía Docker.
 - **Trazabilidad de git baja:** 3 commits para todo el proyecto; falta granularidad e historial.
 - **Ajustes de UI:** el rediseño está aplicado, pero no hubo una pasada final de QA visual documentada.
@@ -174,15 +184,18 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 ## 9. Estado actual
 
 **Listo y verificado:**
+
 - ✅ Correcciones del code review presentes en `HEAD` (verificado con `git grep`).
 - ✅ **Tests automatizados: 24 passed** (ejecutado hoy con SQLite en memoria).
 - ✅ **Commit + push realizados** (commit `8aa891f`); `main` sincronizado con `origin/main`, árbol limpio.
 - ✅ Stack levanta con Docker; `GET /health` responde OK; frontend accesible; integración SECOP en vivo (verificado durante la sesión y en la demo grabada).
 
 **Probado manualmente:**
+
 - ✅ Flujo E2E completo (register → browse → bookmark → delete → perfil).
 
 **Falta validar / cerrar:**
+
 - ⚠️ Reconstrucción limpia de Docker post-correcciones con evidencia registrada.
 - ⚠️ Cualquier despliegue en la nube.
 
@@ -207,4 +220,4 @@ Lo que falta para cerrar con integridad es **operativo, no de diseño**: commite
 
 ---
 
-*Repositorio: https://github.com/pena1rafael-jikk/dev-reto-ai-first · Reflexión completa en `SOUL.md`*
+_Repositorio: https://github.com/pena1rafael-jikk/dev-reto-ai-first · Reflexión completa en `SOUL.md`_
