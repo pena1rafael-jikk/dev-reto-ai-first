@@ -188,15 +188,19 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 - ✅ Correcciones del code review presentes en `HEAD` (verificado con `git grep`).
 - ✅ **Tests automatizados: 24 passed** (ejecutado hoy con SQLite en memoria).
 - ✅ **Commit + push realizados** (commit `8aa891f`); `main` sincronizado con `origin/main`, árbol limpio.
-- ✅ Stack levanta con Docker; `GET /health` responde OK; frontend accesible; integración SECOP en vivo (verificado durante la sesión y en la demo grabada).
+- ✅ **Reconstrucción limpia de Docker realizada y verificada** (`docker compose up --build -d`, 2026-07-03): imágenes `backend`/`frontend` reconstruidas, contenedores recreados, `db` healthy, backend arrancó sin errores (`Application startup complete`, sin fallo de `SECRET_KEY`).
+- ✅ Post-rebuild: `GET /health` → `{"status":"ok"}`; frontend → `200`; `GET /convocatorias` sin token → `403` (auth enforcement correcto).
+- ✅ **Tests automatizados: 24 passed** (ejecutado hoy con SQLite en memoria).
 
-**Probado manualmente:**
+**Probado manualmente / con evidencia de logs (post-rebuild, 2026-07-03):**
 
-- ✅ Flujo E2E completo (register → browse → bookmark → delete → perfil).
+- ✅ Flujo E2E re-verificado contra el stack reconstruido con el script `demo/rehearse.cjs`: **17/17 selectores OK** — registro → auto-login → browse → guardar bookmark → ver "Guardados" (card visible) → perfil.
+- ✅ Logs del backend durante esa corrida confirman, sin errores: `POST /auth/register → 201`, `GET /convocatorias → 200`, `POST /bookmarks → 201`, `GET /bookmarks → 200`, `GET /profile → 200`.
+- ⚠️ **Honesto:** esta corrida verificó visibilidad del botón "Eliminar" pero **no lo clickeó** (no se re-probó el soft-delete vía UI en esta pasada). El soft-delete sí está cubierto por `test_delete_bookmark_ok` en la suite automatizada (24 passed) y se había verificado manualmente por UI en una sesión anterior (ver video demo).
 
 **Falta validar / cerrar:**
 
-- ⚠️ Reconstrucción limpia de Docker post-correcciones con evidencia registrada.
+- ⚠️ Re-click real del botón "Eliminar" en UI tras el rebuild (cubierto por test automatizado, no por esta corrida de rehearsal).
 - ⚠️ Cualquier despliegue en la nube.
 
 ---
@@ -204,7 +208,7 @@ pytest -q                            # → 24 passed (ejecutado local con SQLite
 ## 10. Próximos pasos
 
 1. ~~Commitear y pushear las correcciones de tests de hoy.~~ ✅ **Hecho** (commit `8aa891f`, pusheado a `origin/main`).
-2. **Reconstruir Docker** (`docker compose up --build`) y re-verificar el E2E tras las correcciones.
+2. ~~Reconstruir Docker y re-verificar el E2E.~~ ✅ **Hecho** (2026-07-03): rebuild limpio + 17/17 selectores E2E OK contra el stack reconstruido (ver §9). Pendiente menor: re-click real de "Eliminar" en UI (ya cubierto por test automatizado).
 3. **Mejorar trazabilidad:** commits granulares y semánticos de aquí en adelante.
 4. **Evaluar despliegue** en una plataforma (documentar URL pública si se realiza).
 5. **Automatizar E2E:** convertir el script Playwright de la demo en suite de CI.
